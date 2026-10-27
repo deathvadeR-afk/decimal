@@ -2293,6 +2293,28 @@ func TestBigFloat(t *testing.T) {
 	}
 }
 
+func TestDecimal_Mod_QP_QTGO_2_1(t *testing.T) {
+	t.Run("[QP-QTGO-2-1] returns 20 for 41 mod 21", func(t *testing.T) {
+		a := New(41, 0)
+		b := New(21, 0)
+		c := a.Mod(b)
+		if c.String() != "20" {
+			t.Errorf("expected 20, got %s", c.String())
+		}
+	})
+}
+
+func TestDecimal_Mod_QP_QTGO_2_2(t *testing.T) {
+	t.Run("[QP-QTGO-2-2] returns 200000000000 for 400000000001 mod 200000000001", func(t *testing.T) {
+		a := New(400000000001, 0)
+		b := New(200000000001, 0)
+		c := a.Mod(b)
+		if c.String() != "200000000000" {
+			t.Errorf("expected 200000000000, got %s", c.String())
+		}
+	})
+}
+
 func TestDecimal_Min(t *testing.T) {
 	// the first element in the array is the expected answer, rest are inputs
 	testCases := [][]float64{
