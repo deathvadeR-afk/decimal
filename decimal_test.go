@@ -256,6 +256,42 @@ func TestNewFromString(t *testing.T) {
 	}
 }
 
+// [QP-QTGO-7-1] Parses a leading typographic minus sign as a negative number
+func TestNewFromStringTypographicMinusSign(t *testing.T) {
+	d, err := NewFromString("\u2212123.45")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	expected, _ := NewFromString("-123.45")
+	if !d.Equal(expected) {
+		t.Errorf("expected -123.45, got %s", d.String())
+	}
+}
+
+// [QP-QTGO-7-2] Parses a typographic minus followed by a leading decimal point
+func TestNewFromStringTypographicMinusLeadingPoint(t *testing.T) {
+	d, err := NewFromString("\u2212.5")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	expected, _ := NewFromString("-0.5")
+	if !d.Equal(expected) {
+		t.Errorf("expected -0.5, got %s", d.String())
+	}
+}
+
+// [QP-QTGO-7-3] Applies an exponent written with a typographic minus sign
+func TestNewFromStringTypographicMinusExponent(t *testing.T) {
+	d, err := NewFromString("1e\u22122")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	expected, _ := NewFromString("0.01")
+	if !d.Equal(expected) {
+		t.Errorf("expected 0.01, got %s", d.String())
+	}
+}
+
 func TestNewFromFormattedString(t *testing.T) {
 	for _, testCase := range []struct {
 		Formatted string
