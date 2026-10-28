@@ -2165,6 +2165,40 @@ func TestDecimal_Mod(t *testing.T) {
 	}
 }
 
+func TestDecimal_Mod_QP_QTGO_6_1(t *testing.T) {
+	t.Run("[QP-QTGO-6-1] Mod returns 20 for 41 mod 21", func(t *testing.T) {
+		a, err := NewFromString("41")
+		if err != nil {
+			t.FailNow()
+		}
+		b, err := NewFromString("21")
+		if err != nil {
+			t.FailNow()
+		}
+		c := a.Mod(b)
+		if c.String() != "20" {
+			t.Errorf("expected 20, got %s", c.String())
+		}
+	})
+}
+
+func TestDecimal_Mod_QP_QTGO_6_2(t *testing.T) {
+	t.Run("[QP-QTGO-6-2] Mod returns 200000000000 for 400000000001 mod 200000000001", func(t *testing.T) {
+		a, err := NewFromString("400000000001")
+		if err != nil {
+			t.FailNow()
+		}
+		b, err := NewFromString("200000000001")
+		if err != nil {
+			t.FailNow()
+		}
+		c := a.Mod(b)
+		if c.String() != "200000000000" {
+			t.Errorf("expected 200000000000, got %s", c.String())
+		}
+	})
+}
+
 func TestDecimal_Overflow(t *testing.T) {
 	if !didPanic(func() { New(1, math.MinInt32).Mul(New(1, math.MinInt32)) }) {
 		t.Fatalf("should have gotten an overflow panic")
