@@ -225,7 +225,12 @@ func NewFromString(value string) (Decimal, error) {
 	}
 
 	if eIndex != -1 {
-		expInt, err := strconv.ParseInt(value[eIndex+1:], 10, 32)
+		expText := value[eIndex+1:]
+			if len(expText) >= 3 && expText[:3] == "\u2212" {
+				// U+2212 MINUS SIGN used as the exponent sign
+				expText = "-" + expText[3:]
+			}
+			expInt, err := strconv.ParseInt(expText, 10, 32)
 		if err != nil {
 			if e, ok := err.(*strconv.NumError); ok && e.Err == strconv.ErrRange {
 				return Decimal{}, fmt.Errorf("can't convert %s to decimal: fractional part too long", value)
@@ -287,6 +292,9 @@ func parseInt64SkipIndex(s string, skip int) (int64, bool) {
 	i, neg := 0, false
 	if len(s) > 0 && skip != 0 && (s[0] == '+' || s[0] == '-') {
 		i, neg = 1, s[0] == '-'
+	} else if len(s) >= 3 && skip != 0 && s[:3] == "\u2212" {
+		// U+2212 MINUS SIGN is three bytes in UTF-8
+		i, neg = 3, true
 	}
 	var n int64
 	digits := 0
