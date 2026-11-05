@@ -2165,6 +2165,51 @@ func TestDecimal_Mod(t *testing.T) {
 	}
 }
 
+// [QP-QTGO-13-1] Mod returns 20 for 41 mod 21
+func TestDecimal_Mod_QP_QTGO_13_1(t *testing.T) {
+	a, err := NewFromString("41")
+	if err != nil {
+		t.FailNow()
+	}
+	b, err := NewFromString("21")
+	if err != nil {
+		t.FailNow()
+	}
+	if c := a.Mod(b); c.String() != "20" {
+		t.Errorf("expected 20, got %s", c.String())
+	}
+}
+
+// [QP-QTGO-13-2] Mod returns 200000000000 for 400000000001 mod 200000000001
+func TestDecimal_Mod_QP_QTGO_13_2(t *testing.T) {
+	a, err := NewFromString("400000000001")
+	if err != nil {
+		t.FailNow()
+	}
+	b, err := NewFromString("200000000001")
+	if err != nil {
+		t.FailNow()
+	}
+	if c := a.Mod(b); c.String() != "200000000000" {
+		t.Errorf("expected 200000000000, got %s", c.String())
+	}
+}
+
+// [QP-QTGO-13-3] Mod keeps the dividend's sign for a negative dividend
+func TestDecimal_Mod_QP_QTGO_13_3(t *testing.T) {
+	a, err := NewFromString("-41")
+	if err != nil {
+		t.FailNow()
+	}
+	b, err := NewFromString("21")
+	if err != nil {
+		t.FailNow()
+	}
+	if c := a.Mod(b); c.String() != "-20" {
+		t.Errorf("expected -20, got %s", c.String())
+	}
+}
+
 func TestDecimal_Overflow(t *testing.T) {
 	if !didPanic(func() { New(1, math.MinInt32).Mul(New(1, math.MinInt32)) }) {
 		t.Fatalf("should have gotten an overflow panic")
