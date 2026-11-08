@@ -1635,6 +1635,21 @@ func Max(first Decimal, rest ...Decimal) Decimal {
 	return ans
 }
 
+// Clamp returns d limited to the range [low, high]. If low is greater than
+// high, the two bounds are swapped first so the smaller one is the low bound.
+func (d Decimal) Clamp(low, high Decimal) Decimal {
+	if low.Cmp(high) > 0 {
+		low, high = high, low
+	}
+	if d.Cmp(low) < 0 {
+		return low
+	}
+	if d.Cmp(high) > 0 {
+		return high
+	}
+	return d
+}
+
 // Sum returns the combined total of the provided first and rest Decimals
 func Sum(first Decimal, rest ...Decimal) Decimal {
 	if len(rest) == 0 {
