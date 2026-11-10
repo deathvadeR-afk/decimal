@@ -2165,6 +2165,59 @@ func TestDecimal_Mod(t *testing.T) {
 	}
 }
 
+func TestDecimal_Mod_QP_QTGO_15_1(t *testing.T) {
+	// [QP-QTGO-15-1] Returns 20 for 41 mod 21
+	a, err := NewFromString("41")
+	if err != nil {
+		t.FailNow()
+	}
+	b, err := NewFromString("21")
+	if err != nil {
+		t.FailNow()
+	}
+	if got := a.Mod(b).String(); got != "20" {
+		t.Errorf("expected 20, got %s", got)
+	}
+}
+
+func TestDecimal_Mod_QP_QTGO_15_2(t *testing.T) {
+	// [QP-QTGO-15-2] Returns 200000000000 for 400000000001 mod 200000000001
+	a, err := NewFromString("400000000001")
+	if err != nil {
+		t.FailNow()
+	}
+	b, err := NewFromString("200000000001")
+	if err != nil {
+		t.FailNow()
+	}
+	if got := a.Mod(b).String(); got != "200000000000" {
+		t.Errorf("expected 200000000000, got %s", got)
+	}
+}
+
+func TestDecimal_Mod_QP_QTGO_15_3(t *testing.T) {
+	// [QP-QTGO-15-3] Keeps the existing Mod expectations in TestDecimal_Mod
+	pairs := []struct {
+		a, b, res string
+	}{
+		{"-7.5", "2", "-1.5"},
+		{"7.5", "-2", "1.5"},
+	}
+	for _, p := range pairs {
+		a, err := NewFromString(p.a)
+		if err != nil {
+			t.FailNow()
+		}
+		b, err := NewFromString(p.b)
+		if err != nil {
+			t.FailNow()
+		}
+		if c := a.Mod(b).String(); c != p.res {
+			t.Errorf("expected %s, got %s", p.res, c)
+		}
+	}
+}
+
 func TestDecimal_Overflow(t *testing.T) {
 	if !didPanic(func() { New(1, math.MinInt32).Mul(New(1, math.MinInt32)) }) {
 		t.Fatalf("should have gotten an overflow panic")
