@@ -2165,6 +2165,65 @@ func TestDecimal_Mod(t *testing.T) {
 	}
 }
 
+// [QP-QTGO-21-1] Returns 20 for 41 mod 21
+func TestDecimal_Mod_QTGO21_41Mod21(t *testing.T) {
+	a, err := NewFromString("41")
+	if err != nil {
+		t.FailNow()
+	}
+	b, err := NewFromString("21")
+	if err != nil {
+		t.FailNow()
+	}
+	expected, _ := NewFromString("20")
+	if c := a.Mod(b); c.Cmp(expected) != 0 {
+		t.Errorf("expected 20, got %s", c.String())
+	}
+}
+
+// [QP-QTGO-21-2] Returns 200000000000 for 400000000001 mod 200000000001
+func TestDecimal_Mod_QTGO21_LargeMod(t *testing.T) {
+	a, err := NewFromString("400000000001")
+	if err != nil {
+		t.FailNow()
+	}
+	b, err := NewFromString("200000000001")
+	if err != nil {
+		t.FailNow()
+	}
+	expected, _ := NewFromString("200000000000")
+	if c := a.Mod(b); c.Cmp(expected) != 0 {
+		t.Errorf("expected 200000000000, got %s", c.String())
+	}
+}
+
+// [QP-QTGO-21-3] Keeps existing positive-operand remainders unchanged
+func TestDecimal_Mod_QTGO21_PositivePairs(t *testing.T) {
+	pairs := []struct {
+		a    string
+		b    string
+		want string
+	}{
+		{"3", "2", "1"},
+		{"3451204593", "2454495034", "996709559"},
+		{"9999999999", "1275", "324"},
+	}
+	for _, p := range pairs {
+		a, err := NewFromString(p.a)
+		if err != nil {
+			t.FailNow()
+		}
+		b, err := NewFromString(p.b)
+		if err != nil {
+			t.FailNow()
+		}
+		expected, _ := NewFromString(p.want)
+		if c := a.Mod(b); c.Cmp(expected) != 0 {
+			t.Errorf("expected %s mod %s to be %s, got %s", p.a, p.b, p.want, c.String())
+		}
+	}
+}
+
 func TestDecimal_Overflow(t *testing.T) {
 	if !didPanic(func() { New(1, math.MinInt32).Mul(New(1, math.MinInt32)) }) {
 		t.Fatalf("should have gotten an overflow panic")
