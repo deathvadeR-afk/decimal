@@ -626,7 +626,7 @@ func (d Decimal) DivRound(d2 Decimal, precision int32) Decimal {
 
 // Mod returns d % d2.
 func (d Decimal) Mod(d2 Decimal) Decimal {
-	quo := d.DivRound(d2, -d.exp+1).Truncate(0)
+	quo, _ := d.QuoRem(d2, 0)
 	return d.Sub(d2.Mul(quo))
 }
 
