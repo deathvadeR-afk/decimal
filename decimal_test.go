@@ -3587,17 +3587,17 @@ func TestDecimal_ExpHullAbrham(t *testing.T) {
 		{"-0.569297", 20, "0.56592314285957604443"},
 		{"-1.0", 1, "0.4"},
 		{"-1.0", 5, "0.36788"},
-		{"-3.0", 1, "0"},
+		{"-3.0", 1, "0.05"},
 		{"-3.0", 2, "0.05"},
-		{"-3.0", 10, "0.0497870684"},
-		{"-5.26", 2, "0.01"},
-		{"-5.26", 10, "0.0051953047"},
-		{"-5.2663117716", 2, "0.01"},
-		{"-5.2663117716", 10, "0.0051626164"},
-		{"-26.1", 2, "0"},
-		{"-26.1", 15, "0.000000000004623"},
-		{"-50.1591", 10, "0"},
-		{"-50.1591", 30, "0.000000000000000000000164505208"},
+		{"-3.0", 10, "0.04978706837"},
+		{"-5.26", 2, "0.0052"},
+		{"-5.26", 10, "0.005195304719"},
+		{"-5.2663117716", 2, "0.0052"},
+		{"-5.2663117716", 10, "0.005162616411"},
+		{"-26.1", 2, "0.0000000000046"},
+		{"-26.1", 15, "0.00000000000462289492466867"},
+		{"-50.1591", 10, "0.0000000000000000000001645052084"},
+		{"-50.1591", 30, "0.000000000000000000000164505208424152908216198963722"},
 	} {
 		d, _ := NewFromString(testCase.Dec)
 		expected, _ := NewFromString(testCase.ExpectedDec)
@@ -3611,6 +3611,66 @@ func TestDecimal_ExpHullAbrham(t *testing.T) {
 			t.Errorf("expected %s, got %s, for decimal %s", testCase.ExpectedDec, exp.String(), testCase.Dec)
 		}
 
+	}
+}
+
+// [QP-QTGO-32-1] Returns 0.05 for exp(-3) at precision 1, not 0.
+func TestDecimal_ExpHullAbrham_QP_QTGO_32_1(t *testing.T) {
+	d, _ := NewFromString("-3")
+	expected, _ := NewFromString("0.05")
+
+	exp, err := d.ExpHullAbrham(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if exp.Cmp(expected) != 0 {
+		t.Errorf("expected %s, got %s, for decimal %s", expected, exp, d)
+	}
+}
+
+// [QP-QTGO-32-2] Returns 0.0000000000046 for exp(-26.1) at precision 2, not 0.
+func TestDecimal_ExpHullAbrham_QP_QTGO_32_2(t *testing.T) {
+	d, _ := NewFromString("-26.1")
+	expected, _ := NewFromString("0.0000000000046")
+
+	exp, err := d.ExpHullAbrham(2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if exp.Cmp(expected) != 0 {
+		t.Errorf("expected %s, got %s, for decimal %s", expected, exp, d)
+	}
+}
+
+// [QP-QTGO-32-3] Returns 0.0111 for exp(-4.5) at precision 3.
+func TestDecimal_ExpHullAbrham_QP_QTGO_32_3(t *testing.T) {
+	d, _ := NewFromString("-4.5")
+	expected, _ := NewFromString("0.0111")
+
+	exp, err := d.ExpHullAbrham(3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if exp.Cmp(expected) != 0 {
+		t.Errorf("expected %s, got %s, for decimal %s", expected, exp, d)
+	}
+}
+
+// [QP-QTGO-32-4] Does not return more significant figures than requested for a result below 1: exp(-3) at precision 1 is 0.05.
+func TestDecimal_ExpHullAbrham_QP_QTGO_32_4(t *testing.T) {
+	d, _ := NewFromString("-3")
+	expected, _ := NewFromString("0.05")
+
+	exp, err := d.ExpHullAbrham(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if exp.Cmp(expected) != 0 {
+		t.Errorf("expected %s, got %s, for decimal %s", expected, exp, d)
 	}
 }
 

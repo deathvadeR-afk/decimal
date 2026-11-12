@@ -726,7 +726,12 @@ func (d Decimal) ExpHullAbrham(overallPrecision uint32) (Decimal, error) {
 		roundDigits = int32(currentPrecision)
 	}
 
-	res = res.Round(roundDigits)
+	// Result below 1: keep overallPrecision significant figures, not decimal places
+		if res.Cmp(one) < 0 {
+			roundDigits = int32(currentPrecision) - resNumDigits - res.exp
+		}
+
+		res = res.Round(roundDigits)
 
 	return res, nil
 }
