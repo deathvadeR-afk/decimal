@@ -720,7 +720,7 @@ func (d Decimal) ExpHullAbrham(overallPrecision uint32) (Decimal, error) {
 	resNumDigits := int32(res.NumDigits())
 
 	var roundDigits int32
-	if resNumDigits > abs(res.exp) {
+	if resNumDigits > abs(res.exp) || resNumDigits+res.exp <= 0 {
 		roundDigits = int32(currentPrecision) - resNumDigits - res.exp
 	} else {
 		roundDigits = int32(currentPrecision)
