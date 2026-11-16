@@ -5226,3 +5226,72 @@ func TestRoundingExponentNormalization(t *testing.T) {
 		}
 	}
 }
+
+// roundToMultipleOf calls RoundToMultiple through reflection, so this file
+// still compiles while the method is missing; a missing method fails the test.
+func roundToMultipleOf(d, step Decimal) (Decimal, error) {
+	m := reflect.ValueOf(d).MethodByName("RoundToMultiple")
+	if !m.IsValid() {
+		return Zero, fmt.Errorf("Decimal has no RoundToMultiple method")
+	}
+	out := m.Call([]reflect.Value{reflect.ValueOf(step)})
+	got, _ := out[0].Interface().(Decimal)
+	err, _ := out[1].Interface().(error)
+	return got, err
+}
+
+func TestDecimal_RoundToMultiple(t *testing.T) {
+	tests := []struct {
+		name  string
+		value string
+		step  string
+		want  string
+	}{
+		{"[QP-QTGO-34-1] Rounds 7 down to 5 with step 5", "7", "5", "5"},
+		{"[QP-QTGO-34-2] Rounds 8 up to 10 with step 5", "8", "5", "10"},
+		{"[QP-QTGO-34-3] Rounds a fractional value to the nearest multiple of a fractional step", "1.234", "0.05", "1.25"},
+		{"[QP-QTGO-34-4] Rounds a large value to the nearest hundred", "12345", "100", "12300"},
+		{"[QP-QTGO-34-5] Rounds a positive exact halfway value away from zero", "7.5", "5", "10"},
+		{"[QP-QTGO-34-6] Rounds a negative exact halfway value away from zero", "-7.5", "5", "-10"},
+		{"[QP-QTGO-34-7] Returns a value that is already a multiple unchanged", "10", "5", "10"},
+		{"[QP-QTGO-34-8] Returns zero as zero for any positive step", "0", "5", "0"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := roundToMultipleOf(RequireFromString(tc.value), RequireFromString(tc.step))
+			if err != nil {
+				t.Fatalf("RoundToMultiple(%s) with step %s: unexpected error %v", tc.value, tc.step, err)
+			}
+			if want := RequireFromString(tc.want); got.Cmp(want) != 0 {
+				t.Errorf("RoundToMultiple(%s) with step %s: got %s, want %s", tc.value, tc.step, got, want)
+			}
+		})
+	}
+}
+
+func TestDecimal_RoundToMultipleRejectsStep(t *testing.T) {
+	const wantErr = "decimal: step must be greater than zero"
+	tests := []struct {
+		name string
+		step string
+	}{
+		{"[QP-QTGO-34-9] Rejects a zero step with the exact error message", "0"},
+		{"[QP-QTGO-34-10] Rejects a negative step with the exact error message", "-5"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := roundToMultipleOf(RequireFromString("7"), RequireFromString(tc.step))
+			if err == nil {
+				t.Fatalf("RoundToMultiple(7) with step %s: expected an error", tc.step)
+			}
+			if err.Error() != wantErr {
+				t.Errorf("RoundToMultiple(7) with step %s: error %q, want %q", tc.step, err.Error(), wantErr)
+			}
+			if !reflect.DeepEqual(got, Zero) {
+				t.Errorf("RoundToMultiple(7) with step %s: got %#v, want decimal.Zero", tc.step, got)
+			}
+		})
+	}
+}
