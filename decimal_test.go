@@ -3587,17 +3587,17 @@ func TestDecimal_ExpHullAbrham(t *testing.T) {
 		{"-0.569297", 20, "0.56592314285957604443"},
 		{"-1.0", 1, "0.4"},
 		{"-1.0", 5, "0.36788"},
-		{"-3.0", 1, "0"},
+		{"-3.0", 1, "0.05"},
 		{"-3.0", 2, "0.05"},
-		{"-3.0", 10, "0.0497870684"},
-		{"-5.26", 2, "0.01"},
-		{"-5.26", 10, "0.0051953047"},
-		{"-5.2663117716", 2, "0.01"},
-		{"-5.2663117716", 10, "0.0051626164"},
-		{"-26.1", 2, "0"},
-		{"-26.1", 15, "0.000000000004623"},
-		{"-50.1591", 10, "0"},
-		{"-50.1591", 30, "0.000000000000000000000164505208"},
+		{"-3.0", 10, "0.04978706837"},
+		{"-5.26", 2, "0.0052"},
+		{"-5.26", 10, "0.005195304719"},
+		{"-5.2663117716", 2, "0.0052"},
+		{"-5.2663117716", 10, "0.005162616411"},
+		{"-26.1", 2, "0.0000000000046"},
+		{"-26.1", 15, "0.00000000000462289492466867"},
+		{"-50.1591", 10, "0.0000000000000000000001645052084"},
+		{"-50.1591", 30, "0.000000000000000000000164505208424152908216198963722"},
 	} {
 		d, _ := NewFromString(testCase.Dec)
 		expected, _ := NewFromString(testCase.ExpectedDec)
@@ -3612,6 +3612,52 @@ func TestDecimal_ExpHullAbrham(t *testing.T) {
 		}
 
 	}
+}
+
+// TestDecimal_ExpHullAbrham_SignificantFigures checks that a result below 1 keeps
+// overallPrecision significant figures, counted from its leading nonzero digit.
+func TestDecimal_ExpHullAbrham_SignificantFigures(t *testing.T) {
+	t.Run("[QP-QTGO-33-1] returns 0.05 for -3.0 at overall precision 1 instead of 0", func(t *testing.T) {
+		d, _ := NewFromString("-3.0")
+		expected, _ := NewFromString("0.05")
+
+		exp, err := d.ExpHullAbrham(1)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if exp.Cmp(expected) != 0 {
+			t.Errorf("expected %s, got %s", expected.String(), exp.String())
+		}
+	})
+
+	t.Run("[QP-QTGO-33-2] returns 0.0000000000046 for -26.1 at overall precision 2 instead of 0", func(t *testing.T) {
+		d, _ := NewFromString("-26.1")
+		expected, _ := NewFromString("0.0000000000046")
+
+		exp, err := d.ExpHullAbrham(2)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if exp.Cmp(expected) != 0 {
+			t.Errorf("expected %s, got %s", expected.String(), exp.String())
+		}
+	})
+
+	t.Run("[QP-QTGO-33-3] keeps three significant figures for a result below 1", func(t *testing.T) {
+		d, _ := NewFromString("-3.0")
+		expected, _ := NewFromString("0.0498")
+
+		exp, err := d.ExpHullAbrham(3)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if exp.Cmp(expected) != 0 {
+			t.Errorf("expected %s, got %s", expected.String(), exp.String())
+		}
+	})
 }
 
 func TestDecimal_ExpTaylor(t *testing.T) {
