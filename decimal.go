@@ -1470,6 +1470,26 @@ func (d Decimal) RoundCash(interval uint8) Decimal {
 	return d.Mul(dVal).Round(0).DivRound(dVal, 2)
 }
 
+// RoundToMultiple rounds d to the nearest multiple of step. An exact halfway
+// value rounds to the multiple farther from zero. If step is not greater than
+// zero it returns Zero and an error.
+func (d Decimal) RoundToMultiple(step Decimal) (Decimal, error) {
+	if step.Sign() <= 0 {
+		return Zero, fmt.Errorf("decimal: step must be greater than zero")
+	}
+	q := new(big.Rat).Quo(d.Rat(), step.Rat())
+	num := q.Num()
+	den := q.Denom()
+	// n = floor((2|num| + den) / (2den)) rounds |q| half away from zero.
+	twice := new(big.Int).Lsh(new(big.Int).Abs(num), 1)
+	twice.Add(twice, den)
+	n := new(big.Int).Quo(twice, new(big.Int).Lsh(den, 1))
+	if num.Sign() < 0 {
+		n.Neg(n)
+	}
+	return NewFromBigInt(n, 0).Mul(step), nil
+}
+
 // Floor returns the nearest integer value less than or equal to d.
 func (d Decimal) Floor() Decimal {
 	if d.exp >= 0 {
